@@ -5,6 +5,7 @@ import {
   formatWhatsappNumber,
   normalizeFullName,
   normalizeWhatsappNumber,
+  sanitizeJerseyNameInput,
   sanitizeJerseyNumberInput,
   sanitizeWhatsappInput,
   toRegistrationPayload,
@@ -25,6 +26,7 @@ const valid: RegistrationData = {
   battingStyle: 'left',
   playerPhoto: photo(),
   jerseySize: 'L',
+  jerseyName: ' kasun ',
   jerseyNumber: '10',
 }
 
@@ -124,6 +126,22 @@ describe('jersey number', () => {
   })
 })
 
+describe('name on jersey', () => {
+  it('is required, English letters only, max 12 characters', () => {
+    expect(check({ jerseyName: '  ' }, 'jerseyName')).toBe('Please enter the name for your jersey.')
+    expect(check({ jerseyName: 'PERERA' }, 'jerseyName')).toBeUndefined()
+    expect(check({ jerseyName: "D'SILVA" }, 'jerseyName')).toBeUndefined()
+    expect(check({ jerseyName: 'පෙරේරා' }, 'jerseyName')).toMatch(/English letters/)
+    expect(check({ jerseyName: 'ABCDEFGHIJKLM' }, 'jerseyName')).toMatch(/12 characters/)
+  })
+
+  it('uppercases and strips unprintable characters while typing', () => {
+    expect(sanitizeJerseyNameInput('kasun')).toBe('KASUN')
+    expect(sanitizeJerseyNameInput(' k4s#un  p')).toBe('KSUN P')
+    expect(sanitizeJerseyNameInput('abcdefghijklmnop')).toBe('ABCDEFGHIJKL')
+  })
+})
+
 describe('payload', () => {
   it('returns null while incomplete', () => {
     expect(toRegistrationPayload(EMPTY_REGISTRATION)).toBeNull()
@@ -135,6 +153,7 @@ describe('payload', () => {
       fullName: 'Kasun Perera',
       whatsappNumber: '+94771234567',
       jerseyNumber: 10,
+      jerseyName: 'KASUN',
       village: 'kirinda',
     })
   })

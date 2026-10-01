@@ -27,6 +27,7 @@ async function fillProfile(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole('radio', { name: 'Left Hand' }))
   await user.upload(screen.getByTestId('photo-input'), photo)
   await user.click(screen.getByRole('radio', { name: 'XL' }))
+  await user.type(screen.getByLabelText(/name on jersey/i), 'silva')
   await user.type(screen.getByLabelText(/jersey number/i), '07')
 }
 
@@ -78,6 +79,7 @@ describe('RegistrationPage', () => {
     expect(screen.getByText('Please select your playing role.')).toBeInTheDocument()
     expect(screen.getByText('Please upload your player photo.')).toBeInTheDocument()
     expect(screen.getByText('Please select your jersey size.')).toBeInTheDocument()
+    expect(screen.getByText('Please enter the name for your jersey.')).toBeInTheDocument()
     expect(screen.getByText('Please enter a jersey number.')).toBeInTheDocument()
 
     // Back keeps step 1 data.
@@ -104,6 +106,7 @@ describe('RegistrationPage', () => {
     expect(profile.getByText('Left Hand')).toBeInTheDocument()
     expect(profile.getByText('XL')).toBeInTheDocument()
     expect(profile.getByText('#7')).toBeInTheDocument()
+    expect(profile.getByText('SILVA')).toBeInTheDocument()
 
     // Edit from review returns to the right step with data intact.
     await user.click(screen.getByRole('button', { name: /edit player profile/i }))
@@ -122,6 +125,7 @@ describe('RegistrationPage', () => {
       playingRole: 'wicket_keeper',
       battingStyle: 'left',
       jerseySize: 'XL',
+      jerseyName: 'SILVA',
       jerseyNumber: 7,
       playerPhoto: photo,
     })

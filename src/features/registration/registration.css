@@ -21,11 +21,24 @@
 }
 
 .page__footer {
+  display: grid;
+  gap: 4px;
   margin-top: 28px;
   text-align: center;
   font-size: 12px;
   letter-spacing: 0.04em;
   color: var(--text-subtle);
+}
+
+.page__credit {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.page__credit strong {
+  font-weight: 600;
+  color: var(--text-muted);
 }
 
 /* ---------- Brand header ---------- */
@@ -688,24 +701,30 @@
   margin-top: 12px;
 }
 
-/* ---------- Jersey number ---------- */
+/* ---------- Jersey preview & kit fields ---------- */
 
-.jersey-field {
-  display: grid;
-  grid-template-columns: 84px minmax(0, 1fr);
-  gap: 14px;
+.jersey-preview {
+  display: flex;
+  flex-direction: column;
   align-items: center;
+  margin: 0 0 18px;
+  padding: 16px 12px 12px;
+  background:
+    radial-gradient(70% 80% at 50% 30%, rgba(245, 197, 24, 0.07), transparent 70%),
+    var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
 }
 
 .jersey {
-  width: 84px;
-  height: 84px;
+  width: 148px;
+  height: 148px;
 }
 
 .jersey__shirt {
   fill: var(--surface);
   stroke: var(--border-strong);
-  stroke-width: 1.5;
+  stroke-width: 1;
 }
 
 .jersey__trim {
@@ -714,12 +733,12 @@
   stroke-width: 2.5;
 }
 
-.jersey__size {
+.jersey__name {
   font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  fill: var(--text-subtle);
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  fill: var(--text);
 }
 
 .jersey__number {
@@ -729,9 +748,31 @@
   fill: var(--gold);
 }
 
-.jersey__number--empty {
+.jersey__placeholder {
   fill: var(--text-subtle);
-  opacity: 0.6;
+  opacity: 0.45;
+}
+
+.jersey-preview__caption {
+  margin-top: 4px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+.jersey-preview__caption strong {
+  color: var(--gold);
+}
+
+.input--jersey-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .input--jersey {
@@ -743,10 +784,6 @@
   letter-spacing: 0.08em;
   text-align: center;
   font-variant-numeric: tabular-nums;
-}
-
-.jersey-field .field__hint {
-  margin-top: 6px;
 }
 
 /* ---------- Buttons ---------- */
@@ -1137,8 +1174,12 @@
 }
 
 @media (max-width: 340px) {
+  .choices--chip .choice__body {
+    padding-inline: 2px;
+  }
   .choice__label {
     font-size: 16px;
+    letter-spacing: 0;
   }
   .step__actions .btn--secondary {
     padding-inline: 12px;

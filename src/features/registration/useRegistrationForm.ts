@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { BATTING_STYLES, JERSEY_SIZES, PLAYING_ROLES, VILLAGES } from './constants'
 import { EMPTY_REGISTRATION, type FieldErrors, type FieldName, type RegistrationData } from './types'
-import { ALL_FIELDS, validateFields } from './validation'
+import { ALL_FIELDS, sanitizeJerseyNameInput, validateFields } from './validation'
 
 const DRAFT_KEY = 'msl.registration.draft.v1'
 
@@ -27,6 +27,7 @@ function loadDraft(): RegistrationData {
       playingRole: pickOption(PLAYING_ROLES, draft.playingRole),
       battingStyle: pickOption(BATTING_STYLES, draft.battingStyle),
       jerseySize: pickOption(JERSEY_SIZES, draft.jerseySize),
+      jerseyName: sanitizeJerseyNameInput(asString(draft.jerseyName)),
       jerseyNumber: asString(draft.jerseyNumber).replace(/\D/g, '').slice(0, 2),
     }
   } catch {

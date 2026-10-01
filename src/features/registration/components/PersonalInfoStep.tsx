@@ -23,7 +23,6 @@ export function PersonalInfoStep({ data, errors, setField, touchField }: Props) 
           autoCapitalize="words"
           enterKeyHint="next"
           maxLength={NAME_MAX_LENGTH + 10}
-          placeholder="e.g. Kasun Perera"
           value={data.fullName}
           onChange={(event) => setField('fullName', event.target.value)}
           onBlur={() => {

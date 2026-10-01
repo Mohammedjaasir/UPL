@@ -9,5 +9,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     css: false,
+    // The end-to-end flow test types through every step; allow for slower CI machines.
+    testTimeout: 15_000,
   },
 })

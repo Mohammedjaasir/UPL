@@ -1,6 +1,7 @@
 import {
   BATTING_STYLES,
   DOB_MIN,
+  JERSEY_NAME_MAX_LENGTH,
   JERSEY_NUMBER_MAX,
   JERSEY_NUMBER_MIN,
   JERSEY_SIZES,
@@ -59,6 +60,20 @@ export function formatWhatsappNumber(value: string): string {
   const d = normalizeWhatsappNumber(value)
   if (d.length !== 9) return `+94 ${d}`
   return `+94 ${d.slice(0, 2)} ${d.slice(2, 5)} ${d.slice(5)}`
+}
+
+/** Shirt printing uses English capitals: uppercase as typed and drop anything unprintable. */
+export function sanitizeJerseyNameInput(value: string): string {
+  return value
+    .toUpperCase()
+    .replace(/[^A-Z .'-]/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .replace(/^\s+/, '')
+    .slice(0, JERSEY_NAME_MAX_LENGTH)
+}
+
+export function normalizeJerseyName(value: string): string {
+  return value.trim().replace(/\s+/g, ' ').toUpperCase()
 }
 
 export function sanitizeJerseyNumberInput(value: string): string {
@@ -143,6 +158,13 @@ const validators: Record<FieldName, Validator> = {
     playerPhoto ? validatePhotoFile(playerPhoto) : 'Please upload your player photo.',
   jerseySize: ({ jerseySize }) =>
     isOption(JERSEY_SIZES, jerseySize) ? undefined : 'Please select your jersey size.',
+  jerseyName: ({ jerseyName }) => {
+    const name = normalizeJerseyName(jerseyName)
+    if (!name) return 'Please enter the name for your jersey.'
+    if (name.length > JERSEY_NAME_MAX_LENGTH) return `Please keep it to ${JERSEY_NAME_MAX_LENGTH} characters.`
+    if (!/^[A-Z][A-Z .'-]*$/.test(name)) return 'Please use English letters (A–Z) only.'
+    return undefined
+  },
   jerseyNumber: ({ jerseyNumber }) => {
     if (!jerseyNumber) return 'Please enter a jersey number.'
     if (!/^\d+$/.test(jerseyNumber)) return 'Jersey number must be digits only.'
@@ -185,6 +207,7 @@ export function toRegistrationPayload(data: RegistrationData): RegistrationPaylo
     battingStyle: data.battingStyle as RegistrationPayload['battingStyle'],
     playerPhoto: data.playerPhoto as File,
     jerseySize: data.jerseySize as RegistrationPayload['jerseySize'],
+    jerseyName: normalizeJerseyName(data.jerseyName),
     jerseyNumber: Number(data.jerseyNumber),
   }
 }

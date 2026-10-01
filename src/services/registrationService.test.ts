@@ -11,6 +11,7 @@ const payload: RegistrationPayload = {
   battingStyle: 'right',
   playerPhoto: new File(['img'], 'me.jpg', { type: 'image/jpeg' }),
   jerseySize: 'M',
+  jerseyName: 'PERERA',
   jerseyNumber: 7,
 }
 
@@ -48,6 +49,7 @@ describe('submitRegistration', () => {
     const body = init.body as FormData
     expect(body.get('whatsappNumber')).toBe('+94771234567')
     expect(body.get('jerseyNumber')).toBe('7')
+    expect(body.get('jerseyName')).toBe('PERERA')
     expect(body.get('village')).toBe('miella')
     expect(body.get('playerPhoto')).toBeInstanceOf(File)
   })

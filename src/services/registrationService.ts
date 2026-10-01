@@ -5,7 +5,7 @@ import type { FieldErrors, FieldName, RegistrationPayload } from '../features/re
  *
  * Contract (POST, multipart/form-data) — see README "Backend contract":
  *   fields: fullName, dateOfBirth, village, whatsappNumber, playingRole,
- *           battingStyle, jerseySize, jerseyNumber, playerPhoto (file)
+ *           battingStyle, jerseySize, jerseyName, jerseyNumber, playerPhoto (file)
  *   2xx   → { id?: string, registrationId?: string }
  *   409   → { field?: FieldName, message?: string }      (e.g. jersey number taken)
  *   400/422 → { message?: string, errors?: { [field]: string } }
@@ -44,6 +44,7 @@ const KNOWN_FIELDS: readonly FieldName[] = [
   'battingStyle',
   'playerPhoto',
   'jerseySize',
+  'jerseyName',
   'jerseyNumber',
 ]
 
@@ -59,6 +60,7 @@ export function buildRegistrationFormData(payload: RegistrationPayload): FormDat
   form.append('playingRole', payload.playingRole)
   form.append('battingStyle', payload.battingStyle)
   form.append('jerseySize', payload.jerseySize)
+  form.append('jerseyName', payload.jerseyName)
   form.append('jerseyNumber', String(payload.jerseyNumber))
   form.append('playerPhoto', payload.playerPhoto, payload.playerPhoto.name)
   return form

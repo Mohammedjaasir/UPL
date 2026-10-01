@@ -48,6 +48,7 @@ src/
 | `playingRole`    | `batsman` · `bowler` · `all_rounder` · `wicket_keeper` |
 | `battingStyle`   | `right` · `left`                                      |
 | `jerseySize`     | `XS` · `S` · `M` · `L` · `XL` · `XXL` · `XXXL`         |
+| `jerseyName`     | `PERERA` (A–Z, space, `.` `'` `-`; ≤ 12, uppercase)    |
 | `jerseyNumber`   | `1`–`99`                                              |
 | `playerPhoto`    | JPEG / PNG / WebP, ≤ 5 MB                             |
 

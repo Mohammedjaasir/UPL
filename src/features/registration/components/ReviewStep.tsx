@@ -97,6 +97,7 @@ export function ReviewStep({ data, errors, photoUrl, onEdit }: ReviewStepProps) 
           <ReviewItem label="Playing Role" value={labelFor(PLAYING_ROLES, data.playingRole)} error={errors.playingRole} onFix={fix('playingRole', 1)} />
           <ReviewItem label="Batting Style" value={labelFor(BATTING_STYLES, data.battingStyle)} error={errors.battingStyle} onFix={fix('battingStyle', 1)} />
           <ReviewItem label="Jersey Size" value={data.jerseySize} error={errors.jerseySize} onFix={fix('jerseySize', 1)} />
+          <ReviewItem label="Name on Jersey" value={data.jerseyName.trim()} error={errors.jerseyName} onFix={fix('jerseyName', 1)} />
           <ReviewItem
             label="Jersey Number"
             value={data.jerseyNumber && <span className="review-item__jersey">#{data.jerseyNumber}</span>}

@@ -21,7 +21,7 @@ export const STEPS: readonly StepDefinition[] = [
     label: 'Profile',
     title: 'Player Profile',
     description: 'Your role on the field and your match kit.',
-    fields: ['playingRole', 'battingStyle', 'playerPhoto', 'jerseySize', 'jerseyNumber'],
+    fields: ['playingRole', 'battingStyle', 'playerPhoto', 'jerseySize', 'jerseyName', 'jerseyNumber'],
   },
   {
     id: 'review',

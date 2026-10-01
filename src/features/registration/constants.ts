@@ -26,6 +26,8 @@ export const JERSEY_SIZES = [
   { value: 'XXXL', label: 'XXXL' },
 ] as const
 
+export const JERSEY_NAME_MAX_LENGTH = 12
+
 export const JERSEY_NUMBER_MIN = 1
 export const JERSEY_NUMBER_MAX = 99
 

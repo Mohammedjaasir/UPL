@@ -3,7 +3,8 @@ import type { PlayingRole } from '../types'
 import type { RegistrationForm } from '../useRegistrationForm'
 import { ChoiceGroup, type ChoiceOption } from './ChoiceGroup'
 import { AllRounderIcon, BallIcon, BatIcon, StumpsIcon } from './icons'
-import { JerseyNumberField } from './JerseyNumberField'
+import { JerseyPreview } from './JerseyPreview'
+import { JerseyNameField, JerseyNumberField } from './KitFields'
 import { PhotoUpload } from './PhotoUpload'
 
 const ROLE_DETAILS: Record<PlayingRole, Pick<ChoiceOption<PlayingRole>, 'icon' | 'description'>> = {
@@ -58,6 +59,7 @@ export function ProfileStep({ data, errors, setField, touchField, photoUrl }: Pr
       />
 
       <h3 className="section-title">Match Kit</h3>
+      <JerseyPreview name={data.jerseyName} number={data.jerseyNumber} size={data.jerseySize} />
       <ChoiceGroup
         name="jerseySize"
         legend="Jersey Size"
@@ -70,9 +72,14 @@ export function ProfileStep({ data, errors, setField, touchField, photoUrl }: Pr
         error={errors.jerseySize}
         columns={4}
       />
+      <JerseyNameField
+        value={data.jerseyName}
+        error={errors.jerseyName}
+        onChange={(value) => setField('jerseyName', value)}
+        onBlur={() => touchField('jerseyName')}
+      />
       <JerseyNumberField
         value={data.jerseyNumber}
-        size={data.jerseySize}
         error={errors.jerseyNumber}
         onChange={(value) => setField('jerseyNumber', value)}
         onBlur={() => touchField('jerseyNumber')}

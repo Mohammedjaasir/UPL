@@ -17,6 +17,8 @@ export interface RegistrationData {
   battingStyle: BattingStyle | ''
   playerPhoto: File | null
   jerseySize: JerseySize | ''
+  /** Printed on the back of the shirt; stored uppercase. */
+  jerseyName: string
   jerseyNumber: string
 }
 
@@ -34,6 +36,7 @@ export interface RegistrationPayload {
   battingStyle: BattingStyle
   playerPhoto: File
   jerseySize: JerseySize
+  jerseyName: string
   jerseyNumber: number
 }
 
@@ -46,5 +49,6 @@ export const EMPTY_REGISTRATION: RegistrationData = {
   battingStyle: '',
   playerPhoto: null,
   jerseySize: '',
+  jerseyName: '',
   jerseyNumber: '',
 }

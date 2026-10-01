@@ -48,6 +48,23 @@ export function RegistrationPage({ submit = submitRegistration }: RegistrationPa
   const headingRef = useRef<HTMLHeadingElement>(null)
   const pendingFocus = useRef<FieldName | null>(null)
   const hasNavigated = useRef(false)
+  const focusFrame = useRef<number | null>(null)
+
+  /** Focus a field after the next paint (so new error messages are laid out first). */
+  const scheduleFocus = useCallback((field: FieldName) => {
+    if (focusFrame.current !== null) cancelAnimationFrame(focusFrame.current)
+    focusFrame.current = requestAnimationFrame(() => {
+      focusFrame.current = null
+      focusField(field)
+    })
+  }, [])
+
+  useEffect(
+    () => () => {
+      if (focusFrame.current !== null) cancelAnimationFrame(focusFrame.current)
+    },
+    [],
+  )
 
   const isSubmitting = submitState.status === 'submitting'
   const isComplete = submitState.status === 'success'
@@ -93,12 +110,12 @@ export function RegistrationPage({ submit = submitRegistration }: RegistrationPa
     const field = pendingFocus.current
     pendingFocus.current = null
     if (field) {
-      requestAnimationFrame(() => focusField(field))
+      scheduleFocus(field)
     } else {
       window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? 'auto' : 'smooth' })
       headingRef.current?.focus({ preventScroll: true })
     }
-  }, [step])
+  }, [step, scheduleFocus])
 
   // Warn before leaving the page with unsaved details (the photo cannot be restored after a reload).
   useEffect(() => {
@@ -116,7 +133,7 @@ export function RegistrationPage({ submit = submitRegistration }: RegistrationPa
     touchFields(fields)
     const invalid = firstInvalidField(fields)
     if (invalid) {
-      requestAnimationFrame(() => focusField(invalid))
+      scheduleFocus(invalid)
       return
     }
     goToStep((step + 1) as StepIndex)
@@ -276,7 +293,12 @@ export function RegistrationPage({ submit = submitRegistration }: RegistrationPa
         )}
       </main>
 
-      <footer className="page__footer">Miella Super League · Official Player Registration</footer>
+      <footer className="page__footer">
+        <p>Miella Super League · Official Player Registration</p>
+        <p className="page__credit">
+          Powered by <strong>ValGrow Labs</strong>
+        </p>
+      </footer>
     </div>
   )
 }
