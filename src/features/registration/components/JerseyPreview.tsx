@@ -2,10 +2,12 @@ interface JerseyPreviewProps {
   name: string
   number: string
   size: string
+  /** Caption before the size; the registration form speaks to the player. */
+  caption?: string
 }
 
 /** Live mock-up of the back of the player's shirt. Decorative; the real values are in the fields. */
-export function JerseyPreview({ name, number, size }: JerseyPreviewProps) {
+export function JerseyPreview({ name, number, size, caption = 'Your jersey' }: JerseyPreviewProps) {
   const label = name.trim()
   return (
     <figure className="jersey-preview" aria-hidden="true">
@@ -30,7 +32,8 @@ export function JerseyPreview({ name, number, size }: JerseyPreviewProps) {
         </text>
       </svg>
       <figcaption className="jersey-preview__caption">
-        Your jersey{size ? <> · <strong>{size}</strong></> : null}
+        {caption}
+        {size ? <> · <strong>{size}</strong></> : null}
       </figcaption>
     </figure>
   )

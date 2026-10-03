@@ -9,6 +9,16 @@ URL.revokeObjectURL = vi.fn()
 window.scrollTo = vi.fn() as unknown as typeof window.scrollTo
 Element.prototype.scrollIntoView = vi.fn()
 
+// jsdom has <dialog> but not its modal methods.
+HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogElement) {
+  this.open = true
+}
+HTMLDialogElement.prototype.close = function close(this: HTMLDialogElement) {
+  if (!this.open) return
+  this.open = false
+  this.dispatchEvent(new Event('close'))
+}
+
 afterEach(() => {
   cleanup()
   sessionStorage.clear()
