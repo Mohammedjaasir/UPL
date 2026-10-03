@@ -767,9 +767,6 @@
     font-size: 72px;
   }
 
-  .toolbar__row:not(.toolbar__row--end) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (min-width: 900px) {
@@ -816,4 +813,112 @@
   .stats {
     grid-template-columns: 0.8fr 1fr 1fr 1.1fr;
   }
+
+  .toolbar__row:not(.toolbar__row--end) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ---------- Delete ---------- */
+
+/* Small phones: WhatsApp + Full photo share a row, Delete gets its own. */
+@media (max-width: 479px) {
+  .player-dialog__actions {
+    flex-wrap: wrap;
+  }
+
+  .player-dialog__actions .btn {
+    padding-inline: 12px;
+    white-space: nowrap;
+  }
+
+  .player-dialog__actions .player-dialog__delete {
+    flex: 1 1 100%;
+  }
+}
+
+.player-dialog__delete {
+  flex: 0 0 auto;
+  border-color: var(--danger-border);
+}
+
+@media (hover: hover) {
+  .player-dialog__delete:hover:not(:disabled) {
+    background: var(--danger-tint);
+    border-color: var(--danger);
+  }
+}
+
+.btn--danger-solid {
+  color: #1c0a0a;
+  background: var(--danger);
+  border-color: var(--danger);
+}
+
+@media (hover: hover) {
+  .btn--danger-solid:hover:not(:disabled) {
+    background: #ff9393;
+  }
+}
+
+.delete-confirm {
+  padding: 16px 16px max(16px, env(safe-area-inset-bottom));
+  background: var(--danger-tint);
+  border-top: 1px solid var(--danger-border);
+  animation: error-in 160ms var(--ease);
+}
+
+.delete-confirm__title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 20px;
+  text-transform: uppercase;
+  color: var(--danger);
+}
+
+.delete-confirm__text {
+  margin-top: 4px;
+  font-size: 15px;
+  color: var(--text);
+}
+
+.delete-confirm__error {
+  margin-top: 12px;
+}
+
+.delete-confirm__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+/* ---------- Notice (after a delete) ---------- */
+
+.notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 16px;
+  padding: 6px 6px 6px 14px;
+  color: var(--gold);
+  background: var(--gold-tint);
+  border: 1px solid rgba(245, 197, 24, 0.4);
+  border-radius: var(--radius-md);
+  animation: error-in 160ms var(--ease);
+}
+
+.notice > svg {
+  flex: none;
+}
+
+.notice__text {
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+  color: var(--text);
+}
+
+.notice__close {
+  margin: 0;
 }

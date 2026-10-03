@@ -47,6 +47,7 @@ function fakeService(over: Partial<AdminService> = {}): AdminService {
     signOut: vi.fn(async () => {}),
     isOrganiser: vi.fn(async () => true),
     listPlayers: vi.fn(async () => players),
+    deletePlayer: vi.fn(async () => {}),
     ...over,
   }
 }
@@ -106,6 +107,49 @@ describe('AdminApp', () => {
 
     await user.click(within(dialog).getByRole('button', { name: 'Close' }))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('deletes a player only after confirmation and frees the list', async () => {
+    const user = userEvent.setup()
+    const deletePlayer = vi.fn(async () => {})
+    render(<AdminApp service={fakeService({ deletePlayer })} />)
+
+    await user.click(await screen.findByRole('button', { name: /kasun perera, number 7/i }))
+    const dialog = screen.getByRole('dialog', { name: 'Kasun Perera' })
+
+    // First click only asks; "Keep" backs out without deleting.
+    await user.click(within(dialog).getByRole('button', { name: 'Delete' }))
+    expect(within(dialog).getByText(/jersey #7 becomes free/)).toBeInTheDocument()
+    await user.click(within(dialog).getByRole('button', { name: 'Keep' }))
+    expect(deletePlayer).not.toHaveBeenCalled()
+
+    await user.click(within(dialog).getByRole('button', { name: 'Delete' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Delete' }))
+    expect(deletePlayer).toHaveBeenCalledWith(expect.objectContaining({ id: players[0].id, photoPath: 'a.jpg' }))
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Deleted Kasun Perera. Jersey #7 is free again.')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    const list = screen.getByRole('list', { name: /registered players/i })
+    expect(within(list).getAllByRole('button')).toHaveLength(1)
+    const total = within(screen.getByRole('region', { name: /summary/i })).getByText('Players').closest('.stat')
+    expect(total).toHaveTextContent('Players1')
+  })
+
+  it('keeps the player and shows the reason when a delete fails', async () => {
+    const user = userEvent.setup()
+    const deletePlayer = vi.fn(async () => {
+      throw new AdminError('server', 'This registration was not deleted.')
+    })
+    render(<AdminApp service={fakeService({ deletePlayer })} />)
+
+    await user.click(await screen.findByRole('button', { name: /kasun perera, number 7/i }))
+    const dialog = screen.getByRole('dialog', { name: 'Kasun Perera' })
+    await user.click(within(dialog).getByRole('button', { name: 'Delete' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Delete' }))
+
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent('This registration was not deleted.')
+    expect(within(dialog).getByRole('button', { name: /try again/i })).toBeEnabled()
+    expect(within(screen.getByRole('list', { name: /registered players/i })).getAllByRole('button')).toHaveLength(2)
   })
 
   it('shows an empty state and a load error with retry', async () => {

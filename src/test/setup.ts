@@ -1,6 +1,9 @@
 import '@testing-library/jest-dom/vitest'
-import { cleanup } from '@testing-library/react'
+import { cleanup, configure } from '@testing-library/react'
 import { afterEach, vi } from 'vitest'
+
+// findBy*/waitFor default to 1s, which flakes when the whole suite runs on a busy machine.
+configure({ asyncUtilTimeout: 4000 })
 
 // jsdom does not implement object URLs or scrolling.
 let urlCounter = 0

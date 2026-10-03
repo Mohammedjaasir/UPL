@@ -28,6 +28,8 @@ export interface AdminService {
   /** false = signed in, but not on the organiser list. */
   isOrganiser(): Promise<boolean>
   listPlayers(): Promise<Player[]>
+  /** Removes the registration (freeing its jersey number) and then its photo. */
+  deletePlayer(player: Pick<Player, 'id' | 'photoPath'>): Promise<void>
 }
 
 const isNetworkError = (message: string) => /failed to fetch|network|load failed|fetch failed/i.test(message)
@@ -91,6 +93,21 @@ export function createSupabaseAdminService(client: SupabaseClient): AdminService
       const urlByPath = new Map<string, string>()
       if (!linkError) for (const l of links ?? []) if (l.path && l.signedUrl) urlByPath.set(l.path, l.signedUrl)
       return rows.map((r) => fromRow(r, urlByPath.get(r.photo_path) ?? null))
+    },
+
+    async deletePlayer(player) {
+      // Row first: a leftover private photo is harmless, a row pointing at a missing photo is not.
+      // .select() returns what was deleted, because RLS silently deletes nothing when not allowed.
+      const { data, error } = await client.from(REGISTRATIONS_TABLE).delete().eq('id', player.id).select('id')
+      if (error) throw toAdminError(error.message)
+      if (!data || data.length === 0) {
+        throw new AdminError(
+          'server',
+          'This registration was not deleted. It may already be gone, or your account cannot delete yet (run the organiser delete SQL).',
+        )
+      }
+      // Best effort: the registration is already gone either way.
+      await client.storage.from(PHOTO_BUCKET).remove([player.photoPath])
     },
   }
 }

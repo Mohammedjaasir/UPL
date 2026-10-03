@@ -1,11 +1,11 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react'
 import { PLAYING_ROLES, VILLAGES } from '../registration/constants'
 import { LeagueCrest } from '../registration/components/BrandHeader'
-import { AlertIcon, RefreshIcon } from '../registration/components/icons'
+import { AlertIcon, CheckIcon, RefreshIcon } from '../registration/components/icons'
 import type { PlayingRole, Village } from '../registration/types'
 import { AdminError, type AdminService, type Organiser } from './adminService'
 import { Avatar } from './Avatar'
-import { DownloadIcon, PlayerIcon, SearchIcon, SignOutIcon } from './icons'
+import { CloseIcon, DownloadIcon, PlayerIcon, SearchIcon, SignOutIcon } from './icons'
 import { PlayerDialog } from './PlayerDialog'
 import {
   DEFAULT_QUERY,
@@ -38,6 +38,7 @@ export function Dashboard({ service, organiser, onSignOut }: DashboardProps) {
   const [refreshing, setRefreshing] = useState(false)
   const [query, setQuery] = useState<PlayerQuery>(DEFAULT_QUERY)
   const [selected, setSelected] = useState<Player | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
   const deferredSearch = useDeferredValue(query.search)
 
   const fetchPlayers = useCallback(async () => {
@@ -68,6 +69,18 @@ export function Dashboard({ service, organiser, onSignOut }: DashboardProps) {
     [players, query, deferredSearch],
   )
   const filtered = query.search !== '' || query.village !== 'all' || query.role !== 'all'
+
+  const deletePlayer = useCallback(
+    async (player: Player) => {
+      await service.deletePlayer(player)
+      setLoad((current) =>
+        current.status === 'ready' ? { ...current, players: current.players.filter((p) => p.id !== player.id) } : current,
+      )
+      setSelected(null)
+      setNotice(`Deleted ${player.fullName}. Jersey #${player.jerseyNumber} is free again.`)
+    },
+    [service],
+  )
 
   function exportCsv() {
     const blob = new Blob([toCsv(visible)], { type: 'text/csv;charset=utf-8' })
@@ -119,6 +132,16 @@ export function Dashboard({ service, organiser, onSignOut }: DashboardProps) {
             Refresh
           </button>
         </div>
+
+        {notice && (
+          <div className="notice" role="status">
+            <CheckIcon size={18} />
+            <p className="notice__text">{notice}</p>
+            <button type="button" className="icon-btn notice__close" onClick={() => setNotice(null)} aria-label="Dismiss">
+              <CloseIcon size={18} />
+            </button>
+          </div>
+        )}
 
         {load.status === 'error' && (
           <div className="alert admin-alert" role="alert">
@@ -251,7 +274,7 @@ export function Dashboard({ service, organiser, onSignOut }: DashboardProps) {
         </section>
       </main>
 
-      <PlayerDialog player={selected} onClose={() => setSelected(null)} />
+      <PlayerDialog player={selected} onClose={() => setSelected(null)} onDelete={deletePlayer} />
     </div>
   )
 }

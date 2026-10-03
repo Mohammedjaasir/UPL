@@ -21,6 +21,7 @@ vi.mock('./adminService', async (importOriginal) => {
         signOut: async () => {},
         isOrganiser: async () => true,
         listPlayers: async () => [],
+        deletePlayer: async () => {},
       }
     },
   }
