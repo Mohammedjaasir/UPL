@@ -1,7 +1,6 @@
-import { useState } from 'react'
-import { DOB_MIN, NAME_MAX_LENGTH, VILLAGES, WHATSAPP_COUNTRY_CODE } from '../constants'
+import { DOB_MAX, DOB_MIN, NAME_MAX_LENGTH, VILLAGES, WHATSAPP_COUNTRY_CODE } from '../constants'
 import type { RegistrationForm } from '../useRegistrationForm'
-import { normalizeFullName, sanitizeWhatsappInput, toIsoDate } from '../validation'
+import { normalizeFullName, sanitizeWhatsappInput } from '../validation'
 import { ChoiceGroup } from './ChoiceGroup'
 import { Field } from './Field'
 import { describedBy, fieldId } from './fieldIds'
@@ -9,9 +8,6 @@ import { describedBy, fieldId } from './fieldIds'
 type Props = Pick<RegistrationForm, 'data' | 'errors' | 'setField' | 'touchField'>
 
 export function PersonalInfoStep({ data, errors, setField, touchField }: Props) {
-  // Fixed for the life of the form; used as the date picker's upper bound.
-  const [today] = useState(() => toIsoDate(new Date()))
-
   return (
     <>
       <Field name="fullName" label="Full Name" error={errors.fullName}>
@@ -34,14 +30,19 @@ export function PersonalInfoStep({ data, errors, setField, touchField }: Props) 
         />
       </Field>
 
-      <Field name="dateOfBirth" label="Date of Birth" error={errors.dateOfBirth}>
+      <Field
+        name="dateOfBirth"
+        label="Date of Birth"
+        labelSuffix={<span className="field__label-note"> (2012 or earlier)</span>}
+        error={errors.dateOfBirth}
+      >
         <input
           id={fieldId('dateOfBirth')}
           className={`input input--date${data.dateOfBirth ? '' : ' input--empty'}`}
           type="date"
           autoComplete="bday"
           min={DOB_MIN}
-          max={today}
+          max={DOB_MAX}
           value={data.dateOfBirth}
           onChange={(event) => setField('dateOfBirth', event.target.value)}
           onBlur={() => touchField('dateOfBirth')}

@@ -1,5 +1,6 @@
 import {
   BATTING_STYLES,
+  DOB_MAX,
   DOB_MIN,
   JERSEY_NAME_MAX_LENGTH,
   JERSEY_NUMBER_MAX,
@@ -140,6 +141,7 @@ const validators: Record<FieldName, Validator> = {
     if (!dateOfBirth) return 'Please enter your date of birth.'
     if (!isRealIsoDate(dateOfBirth)) return 'Please enter a valid date.'
     if (dateOfBirth > toIsoDate(today)) return 'Date of birth cannot be in the future.'
+    if (dateOfBirth > DOB_MAX) return 'Players must be born in 2012 or earlier.'
     if (dateOfBirth < DOB_MIN) return 'Please check the year of your date of birth.'
     return undefined
   },

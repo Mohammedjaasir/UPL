@@ -31,19 +31,21 @@ export function FieldHint({ name, children }: { name: FieldName; children: React
 
 interface FieldProps {
   name: FieldName
-  label: string
+  label: ReactNode
   hint?: ReactNode
   error?: string
   children: ReactNode
+  labelSuffix?: ReactNode
 }
 
 /** Label + control + hint + error, for single inputs. Choice groups use a fieldset instead. */
-export function Field({ name, label, hint, error, children }: FieldProps) {
+export function Field({ name, label, hint, error, children, labelSuffix }: FieldProps) {
   return (
     <div className={`field${error ? ' field--invalid' : ''}`}>
       <label className="field__label" htmlFor={fieldId(name)}>
         {label}
         <RequiredMark />
+        {labelSuffix}
       </label>
       {children}
       {hint && <FieldHint name={name}>{hint}</FieldHint>}

@@ -48,11 +48,21 @@ describe('full name', () => {
 })
 
 describe('date of birth', () => {
+  it('accepts dates in 2012 or earlier and rejects 2013 and later', () => {
+    expect(check({ dateOfBirth: '2012-12-31' }, 'dateOfBirth')).toBeUndefined()
+    expect(check({ dateOfBirth: '2012-01-01' }, 'dateOfBirth')).toBeUndefined()
+    expect(check({ dateOfBirth: '2010-05-20' }, 'dateOfBirth')).toBeUndefined()
+    expect(check({ dateOfBirth: '2005-04-06' }, 'dateOfBirth')).toBeUndefined()
+    expect(check({ dateOfBirth: '2013-01-01' }, 'dateOfBirth')).toBe('Players must be born in 2012 or earlier.')
+    expect(check({ dateOfBirth: '2013-06-10' }, 'dateOfBirth')).toBe('Players must be born in 2012 or earlier.')
+    expect(check({ dateOfBirth: '2015-04-06' }, 'dateOfBirth')).toBe('Players must be born in 2012 or earlier.')
+  })
+
   it('rejects empty, impossible and future dates', () => {
     expect(check({ dateOfBirth: '' }, 'dateOfBirth')).toBe('Please enter your date of birth.')
     expect(check({ dateOfBirth: '2001-02-30' }, 'dateOfBirth')).toBe('Please enter a valid date.')
-    expect(check({ dateOfBirth: '2026-10-02' }, 'dateOfBirth')).toBe('Date of birth cannot be in the future.')
-    expect(check({ dateOfBirth: '2026-10-01' }, 'dateOfBirth')).toBeUndefined()
+    expect(check({ dateOfBirth: '2026-10-03' }, 'dateOfBirth')).toBe('Date of birth cannot be in the future.')
+    expect(check({ dateOfBirth: '2026-10-01' }, 'dateOfBirth')).toBe('Players must be born in 2012 or earlier.')
     expect(check({ dateOfBirth: '1900-01-01' }, 'dateOfBirth')).toMatch(/check the year/)
   })
 
