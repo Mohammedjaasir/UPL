@@ -52,7 +52,18 @@ describe('LandingPage', () => {
     expect(await screen.findByText('3 players have registered so far.')).toBeInTheDocument()
   })
 
-  it('shows live village counts and the newest players', async () => {
+  it('shows live village counts and the newest players (reduced motion: no count-up)', async () => {
+    // Reduced motion makes the counts final immediately, so this test does not depend on animation timing.
+    const original = window.matchMedia
+    window.matchMedia = vi.fn((query: string) => ({ matches: query.includes('reduce'), media: query })) as unknown as typeof window.matchMedia
+    try {
+      await assertVillagesAndStrip()
+    } finally {
+      window.matchMedia = original
+    }
+  })
+
+  async function assertVillagesAndStrip() {
     render(<LandingPage service={service(players)} />)
     const strip = await screen.findByRole('list', { name: /recently registered players/i })
     expect(within(strip).getAllByRole('listitem').map((li) => li.textContent)).toEqual([
@@ -61,8 +72,9 @@ describe('LandingPage', () => {
       'Player 1Bowler1',
     ])
     const kirinda = screen.getByText('Kirinda', { selector: '.village-tile__name' }).closest('.village-tile')!
+    // Set by an effect right after the players render: wait a tick, not for an animation.
     await waitFor(() => expect(kirinda.querySelector('.village-tile__num')).toHaveTextContent(/^2$/))
-  })
+  }
 
   it('invites the first player when the list is empty', async () => {
     render(<LandingPage service={service([])} />)
