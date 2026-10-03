@@ -15,6 +15,7 @@ const players: RosterPlayer[] = [
     jerseyName: 'PERERA',
     jerseyNumber: 7,
     photoUrl: 'https://example.test/a.jpg',
+    createdAt: '2026-10-02T10:00:00Z',
   },
   {
     id: 'b',
@@ -25,6 +26,7 @@ const players: RosterPlayer[] = [
     jerseyName: 'NUWA',
     jerseyNumber: 18,
     photoUrl: null,
+    createdAt: '2026-10-03T10:00:00Z',
   },
 ]
 
@@ -105,6 +107,7 @@ describe('createSupabaseRosterService', () => {
           jersey_name: 'PERERA',
           jersey_number: 7,
           photo_path: 'a.jpg',
+          created_at: '2026-10-02T10:00:00Z',
         },
       ],
       error: null,

@@ -235,7 +235,7 @@ export function Dashboard({ service, organiser, onSignOut }: DashboardProps) {
               <PlayerIcon size={28} />
               <p className="empty__title">No registrations yet</p>
               <p className="empty__text">Players appear here as soon as they submit the registration form.</p>
-              <a className="btn btn--secondary btn--sm" href="/">
+              <a className="btn btn--secondary btn--sm" href="/register">
                 Open registration form
               </a>
             </div>

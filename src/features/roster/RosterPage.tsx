@@ -69,7 +69,7 @@ export function RosterPage(props: RosterPageProps) {
               ? `${players.length} ${players.length === 1 ? 'player' : 'players'} from Miella, Kirinda and Yagasmulla.`
               : 'Players from Miella, Kirinda and Yagasmulla.'}
           </p>
-          <a className="btn btn--primary roster-cta" href="/">
+          <a className="btn btn--primary roster-cta" href="/register">
             Register to play
           </a>
         </div>
@@ -142,7 +142,7 @@ export function RosterPage(props: RosterPageProps) {
             <PlayerIcon size={28} />
             <p className="empty__title">No players yet</p>
             <p className="empty__text">Be the first from your village to join the league.</p>
-            <a className="btn btn--secondary btn--sm" href="/">
+            <a className="btn btn--secondary btn--sm" href="/register">
               Register to play
             </a>
           </div>

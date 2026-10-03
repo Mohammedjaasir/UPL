@@ -30,6 +30,12 @@
   color: var(--text-subtle);
 }
 
+.page__links {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
 .page__link {
   display: inline-block;
   padding: 10px 4px;

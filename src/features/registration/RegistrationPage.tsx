@@ -295,7 +295,10 @@ export function RegistrationPage({ submit = submitRegistration }: RegistrationPa
 
       <footer className="page__footer">
         <p>Miella Super League · Official Player Registration</p>
-        <p>
+        <p className="page__links">
+          <a className="page__link" href="/">
+            Home
+          </a>
           <a className="page__link" href="/players">
             See registered players
           </a>

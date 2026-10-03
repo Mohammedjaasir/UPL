@@ -1,0 +1,79 @@
+import { render, screen, waitFor, within } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
+import type { RosterPlayer, RosterService } from '../roster/rosterService'
+import { LandingPage } from './LandingPage'
+import { jerseyFaces, latestPlayers, villageCounts } from './squad'
+
+const make = (i: number, over: Partial<RosterPlayer> = {}): RosterPlayer => ({
+  id: `p${i}`,
+  fullName: `Player ${i}`,
+  village: 'miella',
+  playingRole: 'bowler',
+  battingStyle: 'right',
+  jerseyName: `NAME${i}`,
+  jerseyNumber: i,
+  photoUrl: null,
+  createdAt: `2026-10-0${(i % 9) + 1}T10:00:00Z`,
+  ...over,
+})
+
+const players = [make(1), make(2, { village: 'kirinda' }), make(3, { village: 'kirinda' })]
+const service = (list: RosterPlayer[] | Error): RosterService => ({
+  listPlayers: vi.fn(async () => {
+    if (list instanceof Error) throw list
+    return list
+  }),
+})
+
+describe('squad helpers', () => {
+  it('counts every village in a fixed order', () => {
+    expect(villageCounts(players).map((v) => [v.label, v.count])).toEqual([
+      ['Miella', 1],
+      ['Kirinda', 2],
+      ['Yagasmulla', 0],
+    ])
+  })
+
+  it('lists newest players first and invites when nobody has registered', () => {
+    expect(latestPlayers(players).map((p) => p.id)).toEqual(['p3', 'p2', 'p1'])
+    expect(jerseyFaces([])).toEqual([{ name: 'YOUR NAME', number: '10' }])
+    expect(jerseyFaces(players)[0]).toEqual({ name: 'NAME3', number: '3' })
+  })
+})
+
+describe('LandingPage', () => {
+  it('sends people to registration and the player list', async () => {
+    render(<LandingPage service={service(players)} />)
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Three villages.One league.')
+    const registerLinks = screen.getAllByRole('link', { name: /^register( now)?$/i })
+    expect(registerLinks.length).toBeGreaterThanOrEqual(3)
+    for (const link of registerLinks) expect(link).toHaveAttribute('href', '/register')
+    expect(screen.getByRole('link', { name: /see the players/i })).toHaveAttribute('href', '/players')
+    expect(await screen.findByText('3 players have registered so far.')).toBeInTheDocument()
+  })
+
+  it('shows live village counts and the newest players', async () => {
+    render(<LandingPage service={service(players)} />)
+    const strip = await screen.findByRole('list', { name: /recently registered players/i })
+    expect(within(strip).getAllByRole('listitem').map((li) => li.textContent)).toEqual([
+      'Player 3Bowler3',
+      'Player 2Bowler2',
+      'Player 1Bowler1',
+    ])
+    const kirinda = screen.getByText('Kirinda', { selector: '.village-tile__name' }).closest('.village-tile')!
+    await waitFor(() => expect(kirinda.querySelector('.village-tile__num')).toHaveTextContent(/^2$/))
+  })
+
+  it('invites the first player when the list is empty', async () => {
+    render(<LandingPage service={service([])} />)
+    expect(await screen.findByText(/be the first name on the list/i)).toBeInTheDocument()
+    expect(screen.getByText(/your card could be the first one here/i)).toBeInTheDocument()
+  })
+
+  it('still works when live data is unavailable', async () => {
+    render(<LandingPage service={service(new Error('offline'))} />)
+    expect(await screen.findByText('Every player represents one of the three villages.')).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: /the squad so far/i })).not.toBeInTheDocument()
+    expect(screen.getAllByRole('link', { name: /^register now$/i })[0]).toHaveAttribute('href', '/register')
+  })
+})

@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/register", "destination": "/index.html" },
     { "source": "/admin", "destination": "/index.html" },
     { "source": "/players", "destination": "/index.html" }
   ]

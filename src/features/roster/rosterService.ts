@@ -13,6 +13,8 @@ export interface RosterPlayer {
   jerseyName: string
   jerseyNumber: number
   photoUrl: string | null
+  /** ISO timestamp of registration. */
+  createdAt: string
 }
 
 interface RosterRow {
@@ -24,6 +26,7 @@ interface RosterRow {
   jersey_name: string
   jersey_number: number
   photo_path: string | null
+  created_at: string
 }
 
 export class RosterError extends Error {
@@ -56,6 +59,7 @@ export function createSupabaseRosterService(client: SupabaseClient): RosterServi
         battingStyle: r.batting_style as BattingStyle,
         jerseyName: r.jersey_name,
         jerseyNumber: r.jersey_number,
+        createdAt: r.created_at,
         photoUrl: r.photo_path ? client.storage.from(PHOTO_BUCKET).getPublicUrl(r.photo_path).data.publicUrl : null,
       }))
     },

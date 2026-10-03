@@ -1,28 +1,25 @@
-import { lazy, Suspense } from 'react'
-import { RegistrationPage } from './features/registration/RegistrationPage'
+import { lazy, Suspense, type ReactNode } from 'react'
+import { LandingPage } from './features/landing/LandingPage'
 
-// The organiser dashboard and the public player list ship as their own chunks,
-// so the registration form stays as small as possible.
-const AdminApp = lazy(() => import('./features/admin/AdminApp').then((m) => ({ default: m.AdminApp })))
+// Only the landing page is in the main bundle; every other screen is its own chunk.
+const RegistrationPage = lazy(() =>
+  import('./features/registration/RegistrationPage').then((m) => ({ default: m.RegistrationPage })),
+)
 const RosterPage = lazy(() => import('./features/roster/RosterPage').then((m) => ({ default: m.RosterPage })))
+const AdminApp = lazy(() => import('./features/admin/AdminApp').then((m) => ({ default: m.AdminApp })))
 
-const isAdminRoute = (path: string) => /^\/admin\/?$/.test(path)
-const isRosterRoute = (path: string) => /^\/players\/?$/.test(path)
+const route = (path: string) => path.replace(/\/+$/, '') || '/'
 
 export default function App() {
-  if (isAdminRoute(window.location.pathname)) {
-    return (
-      <Suspense fallback={null}>
-        <AdminApp />
-      </Suspense>
-    )
+  const lazyScreen = (screen: ReactNode) => <Suspense fallback={null}>{screen}</Suspense>
+  switch (route(window.location.pathname)) {
+    case '/register':
+      return lazyScreen(<RegistrationPage />)
+    case '/players':
+      return lazyScreen(<RosterPage />)
+    case '/admin':
+      return lazyScreen(<AdminApp />)
+    default:
+      return <LandingPage />
   }
-  if (isRosterRoute(window.location.pathname)) {
-    return (
-      <Suspense fallback={null}>
-        <RosterPage />
-      </Suspense>
-    )
-  }
-  return <RegistrationPage />
 }
