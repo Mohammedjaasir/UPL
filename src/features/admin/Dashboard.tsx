@@ -77,7 +77,7 @@ export function Dashboard({ service, organiser, onSignOut }: DashboardProps) {
         current.status === 'ready' ? { ...current, players: current.players.filter((p) => p.id !== player.id) } : current,
       )
       setSelected(null)
-      setNotice(`Deleted ${player.fullName}. Jersey #${player.jerseyNumber} is free again.`)
+      setNotice(`Deleted ${player.fullName}.`)
     },
     [service],
   )

@@ -21,25 +21,14 @@ export interface JerseyFace {
   number: string
 }
 
-/** Popular shirt numbers to suggest on the invitation faces, if still free. */
-const SUGGESTED_NUMBERS = [10, 7, 23, 18, 45, 99, 1, 11, 33, 77]
+/** Popular shirt numbers shown on the invitation faces. */
+const SUGGESTED_NUMBERS = [10, 7, 23]
 
 /**
  * What the hero jersey cycles through: the newest real names and numbers,
- * then "YOUR NAME" invitations showing numbers that are still free.
- * Always at least two faces, so the jersey keeps moving.
+ * then "YOUR NAME" invitations with popular numbers (any number can be chosen).
  */
 export function jerseyFaces(players: RosterPlayer[]): JerseyFace[] {
   const real = latestPlayers(players, 6).map((p) => ({ name: p.jerseyName, number: String(p.jerseyNumber) }))
-  const taken = new Set(players.map((p) => p.jerseyNumber))
-  const invites = SUGGESTED_NUMBERS.filter((n) => !taken.has(n))
-    .slice(0, 3)
-    .map((n) => ({ name: 'YOUR NAME', number: String(n) }))
-  const faces = [...real, ...invites]
-  // Every suggestion taken: fall back to the first free number so there is still a second face.
-  if (faces.length < 2) {
-    const free = Array.from({ length: 99 }, (_, i) => i + 1).find((n) => !taken.has(n))
-    if (free !== undefined) faces.push({ name: 'YOUR NAME', number: String(free) })
-  }
-  return faces
+  return [...real, ...SUGGESTED_NUMBERS.map((n) => ({ name: 'YOUR NAME', number: String(n) }))]
 }

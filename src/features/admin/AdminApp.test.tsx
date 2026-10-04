@@ -120,7 +120,7 @@ describe('AdminApp', () => {
 
     // First click only asks; "Keep" backs out without deleting.
     await user.click(within(dialog).getByRole('button', { name: 'Delete' }))
-    expect(within(dialog).getByText(/jersey #7 becomes free/)).toBeInTheDocument()
+    expect(within(dialog).getByText(/will be removed\. This cannot be undone\./)).toBeInTheDocument()
     await user.click(within(dialog).getByRole('button', { name: 'Keep' }))
     expect(deletePlayer).not.toHaveBeenCalled()
 
@@ -128,7 +128,7 @@ describe('AdminApp', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Delete' }))
     expect(deletePlayer).toHaveBeenCalledWith(expect.objectContaining({ id: players[0].id, photoPath: 'a.jpg' }))
 
-    expect(await screen.findByRole('status')).toHaveTextContent('Deleted Kasun Perera. Jersey #7 is free again.')
+    expect(await screen.findByRole('status')).toHaveTextContent('Deleted Kasun Perera.')
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     const list = screen.getByRole('list', { name: /registered players/i })
     expect(within(list).getAllByRole('button')).toHaveLength(1)

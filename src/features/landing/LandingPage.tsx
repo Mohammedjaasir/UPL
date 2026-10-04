@@ -83,7 +83,6 @@ export function LandingPage(props: LandingPageProps) {
   const showBar = pastHero && !designInView
 
   const faces = useMemo(() => jerseyFaces(players ?? []), [players])
-  const takenNumbers = useMemo(() => new Set((players ?? []).map((p) => p.jerseyNumber)), [players])
   const total = players?.length ?? null
 
   return (
@@ -171,7 +170,7 @@ export function LandingPage(props: LandingPageProps) {
               </p>
             </Reveal>
             <Reveal index={1}>
-              <JerseyDesigner takenNumbers={takenNumbers} />
+              <JerseyDesigner />
             </Reveal>
           </div>
         </section>

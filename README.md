@@ -65,7 +65,7 @@ supabase/migrations/         table, bucket and security policies (run once)
 | `batting_style`   | `right` · `left`                                        |
 | `jersey_size`     | `XS` · `S` · `M` · `L` · `XL` · `XXL` · `XXXL`           |
 | `jersey_name`     | `PERERA` (A–Z, space, `.` `'` `-`; ≤ 12, uppercase)      |
-| `jersey_number`   | `1`–`99`, unique across the league                      |
+| `jersey_number`   | `1`–`99` (several players may share a number)           |
 | `photo_path`      | `<id>.jpg` in the `player-photos` bucket (≤ 5 MB)       |
 
 A duplicate jersey number is reported on the Jersey Number field so the player can pick

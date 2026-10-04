@@ -4,13 +4,8 @@ import type { JerseySize } from '../registration/types'
 import { prefillDraft } from '../registration/useRegistrationForm'
 import { normalizeJerseyName, sanitizeJerseyNameInput, sanitizeJerseyNumberInput } from '../registration/validation'
 
-interface JerseyDesignerProps {
-  /** Numbers already registered, so a player can avoid them before filling the form. */
-  takenNumbers: ReadonlySet<number>
-}
-
 /** Try your shirt: name, number and size on a live jersey, then carry them into the form. */
-export function JerseyDesigner({ takenNumbers }: JerseyDesignerProps) {
+export function JerseyDesigner() {
   const id = useId()
   const [name, setName] = useState('')
   const [number, setNumber] = useState('')
@@ -18,14 +13,11 @@ export function JerseyDesigner({ takenNumbers }: JerseyDesignerProps) {
 
   const n = number ? Number(number) : null
   const outOfRange = n !== null && (n < JERSEY_NUMBER_MIN || n > JERSEY_NUMBER_MAX)
-  const taken = n !== null && !outOfRange && takenNumbers.has(n)
   const status = outOfRange
     ? { tone: 'bad', text: `Numbers go from ${JERSEY_NUMBER_MIN} to ${JERSEY_NUMBER_MAX}.` }
-    : taken
-      ? { tone: 'bad', text: `Number ${n} is already taken. Try another.` }
-      : n !== null
-        ? { tone: 'good', text: `Number ${n} is free right now.` }
-        : null
+    : n !== null
+      ? { tone: 'good', text: `Number ${n} it is.` }
+      : null
 
   const shownName = normalizeJerseyName(name) || 'YOUR NAME'
   const shownNumber = n !== null && !outOfRange ? String(n) : '00'
@@ -33,7 +25,7 @@ export function JerseyDesigner({ takenNumbers }: JerseyDesignerProps) {
   function carryIntoForm() {
     prefillDraft({
       ...(normalizeJerseyName(name) ? { jerseyName: normalizeJerseyName(name) } : {}),
-      ...(n !== null && !outOfRange && !taken ? { jerseyNumber: String(n) } : {}),
+      ...(n !== null && !outOfRange ? { jerseyNumber: String(n) } : {}),
       ...(size ? { jerseySize: size } : {}),
     })
   }

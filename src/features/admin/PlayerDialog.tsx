@@ -168,8 +168,7 @@ function PlayerPanel({ player, onClose, onDelete, onSave }: { player: Player } &
             Delete this registration?
           </p>
           <p className="delete-confirm__text">
-            {player.fullName} and their photo will be removed, and jersey #{player.jerseyNumber} becomes free. This
-            cannot be undone.
+            {player.fullName} and their photo will be removed. This cannot be undone.
           </p>
           {del.step === 'error' && (
             <div className="alert delete-confirm__error" role="alert">

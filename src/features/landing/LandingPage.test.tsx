@@ -42,16 +42,16 @@ describe('squad helpers', () => {
       { name: 'YOUR NAME', number: '7' },
       { name: 'YOUR NAME', number: '23' },
     ])
-    // Real players first, then invitations that only suggest free numbers.
+    // Real players first, then invitations with popular numbers (numbers can be shared).
     const withTen = [...players, make(10, { createdAt: '2026-09-01T10:00:00Z' })]
     expect(jerseyFaces(withTen).map((f) => `${f.name} ${f.number}`)).toEqual([
       'NAME3 3',
       'NAME2 2',
       'NAME1 1',
       'NAME10 10',
+      'YOUR NAME 10',
       'YOUR NAME 7',
       'YOUR NAME 23',
-      'YOUR NAME 18',
     ])
   })
 })
@@ -101,7 +101,7 @@ describe('LandingPage', () => {
     expect(screen.getAllByText('Your card here')).toHaveLength(4)
   })
 
-  it('lets a player design a jersey, warns about taken numbers, and carries it into the form', async () => {
+  it('lets a player design a jersey with any number (even one already used) and carries it into the form', async () => {
     const user = userEvent.setup()
     render(<LandingPage service={service(players)} />)
     await screen.findByText('3 players have registered so far.')
@@ -110,11 +110,13 @@ describe('LandingPage', () => {
     expect(screen.getByLabelText('Name on the back')).toHaveValue('PERERA')
 
     const number = screen.getByLabelText('Number')
+    // Player 2 already wears #2: sharing a number is allowed.
     await user.type(number, '2')
-    expect(screen.getByText('Number 2 is already taken. Try another.')).toBeInTheDocument()
+    expect(screen.getByText('Number 2 it is.')).toBeInTheDocument()
+    expect(screen.queryByText(/already taken/)).not.toBeInTheDocument()
     await user.clear(number)
-    await user.type(number, '10')
-    expect(screen.getByText('Number 10 is free right now.')).toBeInTheDocument()
+    await user.type(number, '100')
+    expect(number).toHaveValue('10')
 
     await user.click(within(screen.getByRole('group', { name: 'Jersey size' })).getByRole('button', { name: 'L' }))
     const cta = screen.getByRole('link', { name: /register with this jersey/i })
