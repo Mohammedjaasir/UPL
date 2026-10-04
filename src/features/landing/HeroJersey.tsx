@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { prefersReducedMotion } from './motionHooks'
 import type { JerseyFace } from './squad'
 import { CricketBall } from './Stadium'
+import { useRollingNumber } from './useRollingNumber'
 
 const CYCLE_MS = 3000
 const BADGES = ['Batsman', 'Bowler', 'All-rounder', 'Wicket Keeper']
@@ -51,6 +52,7 @@ export function HeroJersey({ faces }: { faces: JerseyFace[] }) {
   }, [])
 
   const long = face.name.length > 7
+  const roll = useRollingNumber(face.number, index)
 
   return (
     <div className="hero-stage" ref={stage} aria-hidden="true">
@@ -82,9 +84,18 @@ export function HeroJersey({ faces }: { faces: JerseyFace[] }) {
               {face.name}
             </text>
           </g>
-          <g key={`d${index}`} className="hero-jersey__number-wrap">
-            <text className="hero-jersey__number" x="50" y="78" textAnchor="middle">
-              {face.number}
+          {/* Scoreboard roll: passing numbers tick in, then the real one slams down. */}
+          <g
+            key={roll.settled ? `final${index}` : `tick${roll.value}`}
+            className={roll.settled ? 'hero-jersey__number-wrap' : 'hero-jersey__number-tick'}
+          >
+            <text
+              className={`hero-jersey__number${roll.settled ? '' : ' hero-jersey__number--rolling'}`}
+              x="50"
+              y="78"
+              textAnchor="middle"
+            >
+              {roll.value}
             </text>
           </g>
         </svg>

@@ -33,6 +33,9 @@ export const JERSEY_NUMBER_MAX = 99
 
 export const NAME_MAX_LENGTH = 60
 export const DOB_MIN = '1940-01-01'
+/** League rule: players must be born in 2012 or earlier. */
+export const DOB_MAX = '2012-12-31'
+export const DOB_MAX_YEAR = 2012
 
 export const PHOTO_MAX_MB = 5
 export const PHOTO_MAX_BYTES = PHOTO_MAX_MB * 1024 * 1024

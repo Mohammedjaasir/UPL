@@ -37,8 +37,22 @@ describe('squad helpers', () => {
 
   it('lists newest players first and invites when nobody has registered', () => {
     expect(latestPlayers(players).map((p) => p.id)).toEqual(['p3', 'p2', 'p1'])
-    expect(jerseyFaces([])).toEqual([{ name: 'YOUR NAME', number: '10' }])
-    expect(jerseyFaces(players)[0]).toEqual({ name: 'NAME3', number: '3' })
+    expect(jerseyFaces([])).toEqual([
+      { name: 'YOUR NAME', number: '10' },
+      { name: 'YOUR NAME', number: '7' },
+      { name: 'YOUR NAME', number: '23' },
+    ])
+    // Real players first, then invitations that only suggest free numbers.
+    const withTen = [...players, make(10, { createdAt: '2026-09-01T10:00:00Z' })]
+    expect(jerseyFaces(withTen).map((f) => `${f.name} ${f.number}`)).toEqual([
+      'NAME3 3',
+      'NAME2 2',
+      'NAME1 1',
+      'NAME10 10',
+      'YOUR NAME 7',
+      'YOUR NAME 23',
+      'YOUR NAME 18',
+    ])
   })
 })
 
