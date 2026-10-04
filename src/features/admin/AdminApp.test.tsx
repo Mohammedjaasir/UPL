@@ -2,7 +2,7 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { AdminApp } from './AdminApp'
-import { AdminError, type AdminService } from './adminService'
+import { AdminError, type AdminService, type PlayerChanges } from './adminService'
 import { fromRow, type Player } from './players'
 
 const players: Player[] = [
@@ -48,6 +48,7 @@ function fakeService(over: Partial<AdminService> = {}): AdminService {
     isOrganiser: vi.fn(async () => true),
     listPlayers: vi.fn(async () => players),
     deletePlayer: vi.fn(async () => {}),
+    updatePlayer: vi.fn(async (player: Player) => player),
     ...over,
   }
 }
@@ -150,6 +151,61 @@ describe('AdminApp', () => {
     expect(await within(dialog).findByRole('alert')).toHaveTextContent('This registration was not deleted.')
     expect(within(dialog).getByRole('button', { name: /try again/i })).toBeEnabled()
     expect(within(screen.getByRole('list', { name: /registered players/i })).getAllByRole('button')).toHaveLength(2)
+  })
+
+  it('edits a player with the same rules as registration and shows the saved values', async () => {
+    const user = userEvent.setup()
+    const updatePlayer = vi.fn(async (player: Player, changes: PlayerChanges) => ({
+      ...player,
+      ...changes,
+    }))
+    render(<AdminApp service={fakeService({ updatePlayer })} />)
+
+    await user.click(await screen.findByRole('button', { name: /kasun perera, number 7/i }))
+    const dialog = screen.getByRole('dialog', { name: 'Kasun Perera' })
+    await user.click(within(dialog).getByRole('button', { name: 'Edit' }))
+
+    const form = within(dialog).getByRole('form', { name: 'Edit Kasun Perera' })
+    expect(within(form).getByLabelText('WhatsApp')).toHaveValue('0771234567')
+
+    // Invalid values are caught before saving.
+    const dob = within(form).getByLabelText('Date of birth')
+    await user.clear(dob)
+    await user.type(dob, '2015-03-01')
+    await user.click(within(form).getByRole('button', { name: 'Save changes' }))
+    expect(within(form).getByText('Players must be born in 2012 or earlier.')).toBeInTheDocument()
+    expect(updatePlayer).not.toHaveBeenCalled()
+
+    await user.clear(dob)
+    await user.type(dob, '2000-05-02')
+    await user.selectOptions(within(form).getByLabelText('Village'), 'yagasmulla')
+    const number = within(form).getByLabelText('Jersey number')
+    await user.clear(number)
+    await user.type(number, '24')
+    await user.click(within(form).getByRole('button', { name: 'Save changes' }))
+
+    expect(updatePlayer).toHaveBeenCalledWith(
+      expect.objectContaining({ id: players[0].id }),
+      expect.objectContaining({ dateOfBirth: '2000-05-02', village: 'yagasmulla', jerseyNumber: 24, whatsappNumber: '+94771234567' }),
+      null,
+    )
+    expect(await screen.findByRole('status')).toHaveTextContent('Saved changes to Kasun Perera.')
+    expect(within(dialog).getByText('Bowler, Yagasmulla')).toBeInTheDocument()
+  })
+
+  it('keeps the edit form open and points at the field when a jersey number is taken', async () => {
+    const user = userEvent.setup()
+    const updatePlayer = vi.fn(async () => {
+      throw new AdminError('conflict', 'Jersey number 18 is already taken by another player.')
+    })
+    render(<AdminApp service={fakeService({ updatePlayer })} />)
+    await user.click(await screen.findByRole('button', { name: /kasun perera, number 7/i }))
+    const dialog = screen.getByRole('dialog', { name: 'Kasun Perera' })
+    await user.click(within(dialog).getByRole('button', { name: 'Edit' }))
+    const form = within(dialog).getByRole('form', { name: 'Edit Kasun Perera' })
+    await user.click(within(form).getByRole('button', { name: 'Save changes' }))
+    expect((await within(form).findAllByText('Jersey number 18 is already taken by another player.')).length).toBeGreaterThan(0)
+    expect(within(form).getByRole('button', { name: 'Save changes' })).toBeEnabled()
   })
 
   it('shows an empty state and a load error with retry', async () => {

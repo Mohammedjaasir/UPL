@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { FieldErrors, RegistrationPayload } from '../features/registration/types'
 import { getSupabase } from '../lib/supabase'
+import { preparePhoto } from './preparePhoto'
 
 /**
  * Saves a player registration to Supabase:
@@ -82,7 +83,12 @@ export interface SubmitOptions {
   store?: RegistrationStore | null
   timeoutMs?: number
   newId?: () => string
+  /** Pause before the 2nd attempt; doubles for the 3rd. Tests pass 0. */
+  retryDelayMs?: number
 }
+
+/** Each network step (photo upload, then the insert) gets this many tries on a dropped connection. */
+const ATTEMPTS = 3
 
 const PHOTO_EXTENSIONS: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }
 
@@ -119,7 +125,44 @@ const SERVER_MESSAGE =
   'Something went wrong on our side and your registration was not saved. Please try again in a moment.'
 
 const looksLikeNetworkFailure = (error: StoreError) =>
-  /failed to fetch|network|load failed|fetch failed/i.test(error.message)
+  /failed to fetch|network|load failed|fetch failed|timed? ?out|aborted/i.test(error.message)
+
+/** A retried upload that finds its own file: the earlier attempt did land. */
+const photoAlreadyThere = (error: StoreError) =>
+  error.status === 409 || /already exists|duplicate/i.test(error.message)
+
+/** A retried insert that hits its own primary key: the earlier attempt did land. */
+const rowAlreadyThere = (error: StoreError) =>
+  error.code === '23505' && /\(id\)|_pkey/.test(`${error.message} ${error.details ?? ''}`)
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+/**
+ * Run one network step with retries on dropped connections.
+ * Returns null on success, or the final StoreError (non-network errors are returned immediately).
+ */
+async function attempt(
+  step: () => Promise<{ error: StoreError | null }>,
+  alreadyDone: (error: StoreError) => boolean,
+  retryDelayMs: number,
+): Promise<StoreError | null> {
+  let last: StoreError | null = null
+  for (let i = 0; i < ATTEMPTS; i++) {
+    if (i > 0) await sleep(retryDelayMs * 2 ** (i - 1))
+    let result: { error: StoreError | null }
+    try {
+      result = await step()
+    } catch (e) {
+      // supabase-js can throw (rather than return) on a dropped connection.
+      result = { error: { message: e instanceof Error ? e.message || 'Failed to fetch' : 'Failed to fetch' } }
+    }
+    if (!result.error) return null
+    if (i > 0 && alreadyDone(result.error)) return null
+    last = result.error
+    if (!looksLikeNetworkFailure(result.error)) return last
+  }
+  return last
+}
 
 function photoError(error: StoreError): RegistrationError {
   if (looksLikeNetworkFailure(error)) return new RegistrationError('network', NETWORK_MESSAGE)
@@ -160,7 +203,7 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
 
 export async function submitRegistration(
   payload: RegistrationPayload,
-  { store, timeoutMs = 45_000, newId = generateId }: SubmitOptions = {},
+  { store, timeoutMs = 120_000, newId = generateId, retryDelayMs = 1500 }: SubmitOptions = {},
 ): Promise<RegistrationResult> {
   const resolvedStore = store === undefined ? defaultStore() : store
   if (!resolvedStore) {
@@ -168,14 +211,18 @@ export async function submitRegistration(
   }
 
   const id = newId()
-  const photoPath = `${id}.${PHOTO_EXTENSIONS[payload.playerPhoto.type] ?? 'jpg'}`
 
   const run = async () => {
-    const upload = await resolvedStore.uploadPhoto(photoPath, payload.playerPhoto)
-    if (upload.error) throw photoError(upload.error)
+    // Shrunk on the phone first: small uploads survive weak mobile connections.
+    const photo = await preparePhoto(payload.playerPhoto)
+    const photoPath = `${id}.${PHOTO_EXTENSIONS[photo.type] ?? 'jpg'}`
 
-    const insert = await resolvedStore.insertRegistration(toRegistrationRow(payload, id, photoPath))
-    if (insert.error) throw insertError(insert.error, payload)
+    const uploadError = await attempt(() => resolvedStore.uploadPhoto(photoPath, photo), photoAlreadyThere, retryDelayMs)
+    if (uploadError) throw photoError(uploadError)
+
+    const row = toRegistrationRow(payload, id, photoPath)
+    const insertErr = await attempt(() => resolvedStore.insertRegistration(row), rowAlreadyThere, retryDelayMs)
+    if (insertErr) throw insertError(insertErr, payload)
 
     return { registrationId: toReference(id) }
   }

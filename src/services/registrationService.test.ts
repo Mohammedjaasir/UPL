@@ -57,7 +57,19 @@ async function failure(promise: Promise<unknown>): Promise<RegistrationError> {
 }
 
 const submit = (store: RegistrationStore | null, timeoutMs?: number) =>
-  submitRegistration(payload, { store, newId: () => ID, timeoutMs })
+  submitRegistration(payload, { store, newId: () => ID, timeoutMs, retryDelayMs: 0 })
+
+/** A store whose calls answer from a script, one entry per attempt. */
+function scriptedStore(uploads: Array<StoreError | null>, inserts: Array<StoreError | null>) {
+  const calls = { upload: 0, insert: 0 }
+  const store: RegistrationStore = {
+    uploadPhoto: vi.fn(async () => ({ error: uploads[Math.min(calls.upload++, uploads.length - 1)] })),
+    insertRegistration: vi.fn(async () => ({ error: inserts[Math.min(calls.insert++, inserts.length - 1)] })),
+  }
+  return { store, calls }
+}
+
+const dropped: StoreError = { message: 'TypeError: Failed to fetch' }
 
 describe('submitRegistration (Supabase)', () => {
   it('refuses to pretend success when Supabase is not configured', async () => {
@@ -132,6 +144,37 @@ describe('submitRegistration (Supabase)', () => {
 
     const thrown = fakeStore({ insert: new TypeError('Load failed') })
     expect((await failure(submit(thrown.store))).kind).toBe('network')
+  })
+
+  it('retries a dropped photo upload and then saves', async () => {
+    const { store, calls } = scriptedStore([dropped, null], [null])
+    await expect(submit(store)).resolves.toEqual({ registrationId: 'MSL-3F9A1C2B' })
+    expect(calls.upload).toBe(2)
+    expect(calls.insert).toBe(1)
+  })
+
+  it('treats "already exists" on a retried upload as the earlier attempt having landed', async () => {
+    const { store, calls } = scriptedStore([dropped, { message: 'The resource already exists', status: 409 }], [null])
+    await expect(submit(store)).resolves.toEqual({ registrationId: 'MSL-3F9A1C2B' })
+    expect(calls.insert).toBe(1)
+  })
+
+  it('treats its own primary key on a retried insert as saved, but still reports a taken jersey number', async () => {
+    const own = { code: '23505', message: 'duplicate key value violates unique constraint "player_registrations_pkey"', details: 'Key (id)=(x) already exists.' }
+    const ok = scriptedStore([null], [dropped, own])
+    await expect(submit(ok.store)).resolves.toEqual({ registrationId: 'MSL-3F9A1C2B' })
+
+    const jersey = { code: '23505', message: 'duplicate key', details: 'Key (jersey_number)=(7) already exists.' }
+    const taken = scriptedStore([null], [dropped, jersey])
+    expect((await failure(submit(taken.store))).kind).toBe('conflict')
+  })
+
+  it('gives up after three dropped attempts with a clear network message', async () => {
+    const { store, calls } = scriptedStore([dropped], [null])
+    const error = await failure(submit(store))
+    expect(error.kind).toBe('network')
+    expect(calls.upload).toBe(3)
+    expect(calls.insert).toBe(0)
   })
 
   it('times out slow requests', async () => {

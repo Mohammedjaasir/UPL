@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { JerseyPreview } from '../registration/components/JerseyPreview'
-import { AlertIcon, Spinner, TrashIcon } from '../registration/components/icons'
-import { AdminError } from './adminService'
+import { AlertIcon, PencilIcon, Spinner, TrashIcon } from '../registration/components/icons'
+import { AdminError, type PlayerChanges } from './adminService'
 import { Avatar } from './Avatar'
 import { ChatIcon, CloseIcon } from './icons'
+import { PlayerEditForm } from './PlayerEditForm'
 import {
   ageOn,
   battingLabel,
@@ -20,10 +21,11 @@ interface PlayerDialogProps {
   player: Player | null
   onClose: () => void
   onDelete: (player: Player) => Promise<void>
+  onSave: (player: Player, changes: PlayerChanges, newPhoto: File | null) => Promise<void>
 }
 
 /** Full details for one player, in a native modal dialog (focus trap + Esc for free). */
-export function PlayerDialog({ player, onClose, onDelete }: PlayerDialogProps) {
+export function PlayerDialog({ player, onClose, onDelete, onSave }: PlayerDialogProps) {
   const ref = useRef<HTMLDialogElement>(null)
 
   useEffect(() => {
@@ -43,15 +45,16 @@ export function PlayerDialog({ player, onClose, onDelete }: PlayerDialogProps) {
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       {/* Keyed so the delete confirmation never carries over to another player. */}
-      {player && <PlayerPanel key={player.id} player={player} onClose={onClose} onDelete={onDelete} />}
+      {player && <PlayerPanel key={player.id} player={player} onClose={onClose} onDelete={onDelete} onSave={onSave} />}
     </dialog>
   )
 }
 
 type DeleteState = { step: 'idle' } | { step: 'confirm' } | { step: 'deleting' } | { step: 'error'; message: string }
 
-function PlayerPanel({ player, onClose, onDelete }: { player: Player } & Omit<PlayerDialogProps, 'player'>) {
+function PlayerPanel({ player, onClose, onDelete, onSave }: { player: Player } & Omit<PlayerDialogProps, 'player'>) {
   const [del, setDel] = useState<DeleteState>({ step: 'idle' })
+  const [editing, setEditing] = useState(false)
   const confirmRef = useRef<HTMLButtonElement>(null)
   const age = ageOn(player.dateOfBirth)
   const deleting = del.step === 'deleting'
@@ -87,6 +90,17 @@ function PlayerPanel({ player, onClose, onDelete }: { player: Player } & Omit<Pl
         </button>
       </div>
 
+      {editing ? (
+        <PlayerEditForm
+          player={player}
+          onCancel={() => setEditing(false)}
+          onSave={async (changes, photo) => {
+            await onSave(player, changes, photo)
+            setEditing(false)
+          }}
+        />
+      ) : (
+        <>
       <div className="player-dialog__body">
         <JerseyPreview
           name={player.jerseyName}
@@ -135,6 +149,10 @@ function PlayerPanel({ player, onClose, onDelete }: { player: Player } & Omit<Pl
               Full photo
             </a>
           )}
+          <button type="button" className="btn btn--secondary player-dialog__edit" onClick={() => setEditing(true)}>
+            <PencilIcon size={18} />
+            Edit
+          </button>
           <button
             type="button"
             className="btn btn--secondary btn--danger player-dialog__delete"
@@ -189,6 +207,8 @@ function PlayerPanel({ player, onClose, onDelete }: { player: Player } & Omit<Pl
             </button>
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   )

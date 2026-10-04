@@ -3,7 +3,7 @@ import { PLAYING_ROLES, VILLAGES } from '../registration/constants'
 import { LeagueCrest } from '../registration/components/BrandHeader'
 import { AlertIcon, CheckIcon, RefreshIcon } from '../registration/components/icons'
 import type { PlayingRole, Village } from '../registration/types'
-import { AdminError, type AdminService, type Organiser } from './adminService'
+import { AdminError, type AdminService, type Organiser, type PlayerChanges } from './adminService'
 import { Avatar } from './Avatar'
 import { CloseIcon, DownloadIcon, PlayerIcon, SearchIcon, SignOutIcon } from './icons'
 import { PlayerDialog } from './PlayerDialog'
@@ -78,6 +78,20 @@ export function Dashboard({ service, organiser, onSignOut }: DashboardProps) {
       )
       setSelected(null)
       setNotice(`Deleted ${player.fullName}. Jersey #${player.jerseyNumber} is free again.`)
+    },
+    [service],
+  )
+
+  const savePlayer = useCallback(
+    async (player: Player, changes: PlayerChanges, newPhoto: File | null) => {
+      const updated = await service.updatePlayer(player, changes, newPhoto)
+      setLoad((current) =>
+        current.status === 'ready'
+          ? { ...current, players: current.players.map((p) => (p.id === updated.id ? updated : p)) }
+          : current,
+      )
+      setSelected(updated)
+      setNotice(`Saved changes to ${updated.fullName}.`)
     },
     [service],
   )
@@ -274,7 +288,7 @@ export function Dashboard({ service, organiser, onSignOut }: DashboardProps) {
         </section>
       </main>
 
-      <PlayerDialog player={selected} onClose={() => setSelected(null)} onDelete={deletePlayer} />
+      <PlayerDialog player={selected} onClose={() => setSelected(null)} onDelete={deletePlayer} onSave={savePlayer} />
     </div>
   )
 }

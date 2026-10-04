@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { getAdminSupabase } from '../../lib/supabase'
 import { PHOTO_BUCKET, REGISTRATIONS_TABLE } from '../../services/registrationService'
+import { preparePhoto } from '../../services/preparePhoto'
 import { fromRow, type Player, type PlayerRow } from './players'
 
 /** Signed photo links last an hour; the dashboard refetches well within that. */
@@ -10,8 +11,22 @@ export interface Organiser {
   email: string
 }
 
+/** Editable fields of a registration, already validated and normalised. */
+export interface PlayerChanges {
+  fullName: string
+  dateOfBirth: string
+  village: Player['village']
+  /** E.164, e.g. +94771234567 */
+  whatsappNumber: string
+  playingRole: Player['playingRole']
+  battingStyle: Player['battingStyle']
+  jerseySize: Player['jerseySize']
+  jerseyName: string
+  jerseyNumber: number
+}
+
 export class AdminError extends Error {
-  readonly kind: 'config' | 'auth' | 'network' | 'server'
+  readonly kind: 'config' | 'auth' | 'network' | 'server' | 'conflict'
   constructor(kind: AdminError['kind'], message: string) {
     super(message)
     this.name = 'AdminError'
@@ -30,6 +45,8 @@ export interface AdminService {
   listPlayers(): Promise<Player[]>
   /** Removes the registration (freeing its jersey number) and then its photo. */
   deletePlayer(player: Pick<Player, 'id' | 'photoPath'>): Promise<void>
+  /** Saves edited details (and an optional replacement photo); returns the updated player. */
+  updatePlayer(player: Player, changes: PlayerChanges, newPhoto?: File | null): Promise<Player>
 }
 
 const isNetworkError = (message: string) => /failed to fetch|network|load failed|fetch failed/i.test(message)
@@ -108,6 +125,60 @@ export function createSupabaseAdminService(client: SupabaseClient): AdminService
       }
       // Best effort: the registration is already gone either way.
       await client.storage.from(PHOTO_BUCKET).remove([player.photoPath])
+    },
+
+    async updatePlayer(player, changes, newPhoto) {
+      // New photo first, under a fresh name, so the old one stays valid until the row points elsewhere.
+      let photoPath = player.photoPath
+      if (newPhoto) {
+        const photo = await preparePhoto(newPhoto)
+        const ext = photo.type === 'image/png' ? 'png' : photo.type === 'image/webp' ? 'webp' : 'jpg'
+        photoPath = `${player.id}-${Date.now().toString(36)}.${ext}`
+        const { error } = await client.storage
+          .from(PHOTO_BUCKET)
+          .upload(photoPath, photo, { contentType: photo.type, upsert: false, cacheControl: '3600' })
+        if (error) throw toAdminError(error.message)
+      }
+
+      const { data, error } = await client
+        .from(REGISTRATIONS_TABLE)
+        .update({
+          full_name: changes.fullName,
+          date_of_birth: changes.dateOfBirth,
+          village: changes.village,
+          whatsapp_number: changes.whatsappNumber,
+          playing_role: changes.playingRole,
+          batting_style: changes.battingStyle,
+          jersey_size: changes.jerseySize,
+          jersey_name: changes.jerseyName,
+          jersey_number: changes.jerseyNumber,
+          photo_path: photoPath,
+        })
+        .eq('id', player.id)
+        .select('*')
+      if (error) {
+        if (newPhoto) await client.storage.from(PHOTO_BUCKET).remove([photoPath])
+        if (error.code === '23505' && /jersey_number/.test(`${error.message} ${error.details ?? ''}`)) {
+          throw new AdminError('conflict', `Jersey number ${changes.jerseyNumber} is already taken by another player.`)
+        }
+        if (error.code === '23514') {
+          throw new AdminError('server', 'Some details were not accepted by the database. Please check the date of birth and other fields.')
+        }
+        throw toAdminError(error.message)
+      }
+      const rows = (data ?? []) as PlayerRow[]
+      if (rows.length === 0) {
+        if (newPhoto) await client.storage.from(PHOTO_BUCKET).remove([photoPath])
+        throw new AdminError(
+          'server',
+          'The changes were not saved. Your account cannot edit yet (run the organiser edit SQL), or this registration was deleted.',
+        )
+      }
+      if (newPhoto && player.photoPath !== photoPath) {
+        await client.storage.from(PHOTO_BUCKET).remove([player.photoPath])
+      }
+      const { data: link } = await client.storage.from(PHOTO_BUCKET).createSignedUrl(photoPath, PHOTO_LINK_SECONDS)
+      return fromRow(rows[0], link?.signedUrl ?? null)
     },
   }
 }
