@@ -838,78 +838,224 @@
   text-decoration: none;
 }
 
-/* ---------- Roles ---------- */
+/* ---------- Roles showcase ---------- */
 
-.roles__grid {
+.showcase {
+  display: grid;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.showcase__tabs {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  margin: 28px 0 0;
-  padding: 0;
-  list-style: none;
+  gap: 8px;
 }
 
-.role-card {
+.showcase__tab {
+  position: relative;
   display: grid;
-  align-content: start;
-  gap: 4px;
-  padding: 18px 16px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 10px 12px;
+  overflow: hidden;
+  text-align: left;
+  color: var(--text);
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-}
-
-.role-card.is-in {
+  border-radius: var(--radius-md);
+  cursor: pointer;
   transition:
-    opacity 0.7s var(--ease-out),
-    transform 0.25s var(--ease-out),
-    border-color 0.25s var(--ease);
+    background-color 200ms var(--ease),
+    border-color 200ms var(--ease),
+    color 200ms var(--ease),
+    transform 100ms var(--ease);
 }
 
 @media (hover: hover) {
-  .role-card.is-in:hover {
-    transform: translateY(-4px);
-    border-color: rgba(245, 197, 24, 0.45);
-  }
-
-  .role-card:hover .role-card__icon {
-    color: var(--on-gold);
-    background: var(--gold);
+  .showcase__tab[aria-selected='false']:hover {
+    border-color: rgba(245, 197, 24, 0.4);
+    background: var(--surface);
   }
 }
 
-.role-card__icon {
+.showcase__tab:active {
+  transform: scale(0.98);
+}
+
+.showcase__tab[aria-selected='true'] {
+  color: var(--on-gold);
+  background: var(--gold);
+  border-color: var(--gold);
+}
+
+.showcase__tab-icon {
   display: grid;
   place-items: center;
-  width: 48px;
-  height: 48px;
-  margin-bottom: 8px;
+  width: 34px;
+  height: 34px;
   color: var(--gold);
   background: var(--gold-tint);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   transition:
     background-color 200ms var(--ease),
     color 200ms var(--ease);
 }
 
-.role-card__title {
+.showcase__tab[aria-selected='true'] .showcase__tab-icon {
+  color: var(--gold);
+  background: var(--on-gold);
+}
+
+.showcase__tab-name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 17px;
+  line-height: 1.05;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.showcase__tab-count {
   font-family: var(--font-display);
   font-weight: 800;
   font-size: 22px;
-  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.75;
+}
+
+/* Thin progress line while the showcase is auto-advancing. */
+.showcase__timer {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: var(--on-gold);
+  opacity: 0.35;
+  transform-origin: 0 50%;
+  animation: timer 4.5s linear both;
+}
+
+@keyframes timer {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+.showcase__stage {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 380px;
+  background:
+    radial-gradient(60% 70% at 80% 20%, rgba(245, 197, 24, 0.22), transparent 70%),
+    repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.022) 0 18px, transparent 18px 36px),
+    var(--bg-card);
+  border: 1px solid rgba(245, 197, 24, 0.28);
+  border-radius: calc(var(--radius-lg) + 4px);
+}
+
+.showcase__content {
+  position: relative;
+  display: grid;
+  align-content: end;
+  gap: 18px;
+  height: 100%;
+  min-height: inherit;
+  padding: 24px 20px;
+}
+
+.showcase__ghost {
+  position: absolute;
+  top: 6px;
+  left: 14px;
+  z-index: -1;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(84px, 24vw, 200px);
+  line-height: 0.9;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(245, 197, 24, 0.18);
+  animation: ghost-in 0.8s var(--ease-out) both;
+}
+
+@keyframes ghost-in {
+  from {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+}
+
+.showcase__icon {
+  position: absolute;
+  top: 22px;
+  right: 18px;
+  display: grid;
+  place-items: center;
+  width: 150px;
+  height: 150px;
+  color: var(--gold);
+  background: radial-gradient(closest-side, rgba(245, 197, 24, 0.18), transparent 75%);
+  border-radius: 50%;
+  filter: drop-shadow(0 0 18px rgba(245, 197, 24, 0.35));
+  animation: icon-pop 0.6s var(--ease-out) both;
+}
+
+.showcase__icon svg {
+  stroke-width: 1.2;
+}
+
+@keyframes icon-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.6) rotate(-18deg);
+  }
+}
+
+.showcase__copy {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  animation: rise 0.6s var(--ease-out) 0.1s both;
+}
+
+.showcase__name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(44px, 11vw, 80px);
+  line-height: 0.92;
   text-transform: uppercase;
 }
 
-.role-card__text {
-  font-size: 14px;
+.showcase__line {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.showcase__detail {
+  max-width: 36ch;
   color: var(--text-muted);
 }
 
-.role-card__count {
-  margin-top: 8px;
-  font-size: 13px;
+.showcase__count {
+  margin-top: 4px;
+  font-size: 15px;
   font-weight: 600;
-  color: var(--gold);
+  color: var(--text);
+}
+
+.showcase__cta {
+  margin-top: 10px;
+  text-decoration: none;
 }
 
 /* ---------- Villages ---------- */
@@ -1354,9 +1500,42 @@
     padding: 36px;
   }
 
-  .roles__grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 14px;
+  .showcase {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: 16px;
+  }
+
+  .showcase__tabs {
+    grid-template-columns: 1fr;
+    align-content: stretch;
+  }
+
+  .showcase__tab {
+    min-height: 0;
+    padding: 16px 18px;
+  }
+
+  .showcase__tab-name {
+    font-size: 24px;
+  }
+
+  .showcase__tab-count {
+    font-size: 28px;
+  }
+
+  .showcase__stage {
+    min-height: 440px;
+  }
+
+  .showcase__content {
+    padding: 36px;
+  }
+
+  .showcase__icon {
+    top: 32px;
+    right: 32px;
+    width: 190px;
+    height: 190px;
   }
 
   .villages__grid {
@@ -1498,6 +1677,10 @@
   .hero-jersey__name-wrap,
   .hero-jersey__number-wrap,
   .designer__number,
+  .showcase__timer,
+  .showcase__ghost,
+  .showcase__icon,
+  .showcase__copy,
   .ticker__track {
     animation: none;
   }

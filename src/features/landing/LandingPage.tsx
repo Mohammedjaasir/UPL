@@ -1,9 +1,7 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import '../registration/registration.css'
 import { LeagueCrest } from '../registration/components/BrandHeader'
-import { AllRounderIcon, ArrowRightIcon, BallIcon, BatIcon, StumpsIcon } from '../registration/components/icons'
-import { PLAYING_ROLES } from '../registration/constants'
-import type { PlayingRole } from '../registration/types'
+import { ArrowRightIcon } from '../registration/components/icons'
 import { battingLabel, roleLabel, villageLabel } from '../admin/players'
 import { PlayerIcon } from '../admin/icons'
 import { getDefaultRosterService, type RosterPlayer, type RosterService } from '../roster/rosterService'
@@ -12,6 +10,7 @@ import { JerseyDesigner } from './JerseyDesigner'
 import './landing.css'
 import { useCountUp, useInView } from './motionHooks'
 import { Reveal } from './Reveal'
+import { RoleShowcase } from './RoleShowcase'
 import { jerseyFaces, latestPlayers, villageCounts, type VillageCount } from './squad'
 import { Stadium } from './Stadium'
 
@@ -26,13 +25,6 @@ const FACTS = [
   { value: 99, label: 'Shirt numbers' },
   { value: 7, label: 'Jersey sizes' },
 ]
-
-const ROLES: Record<PlayingRole, { icon: ReactNode; text: string }> = {
-  batsman: { icon: <BatIcon size={26} />, text: 'Scores the runs' },
-  bowler: { icon: <BallIcon size={26} />, text: 'Takes the wickets' },
-  all_rounder: { icon: <AllRounderIcon size={26} />, text: 'Bats and bowls' },
-  wicket_keeper: { icon: <StumpsIcon size={26} />, text: 'Behind the stumps' },
-}
 
 const STEPS = [
   { title: 'Your details', text: 'Full name, date of birth, your village and WhatsApp number.' },
@@ -192,23 +184,9 @@ export function LandingPage(props: LandingPageProps) {
                 Every role has a place
               </h2>
             </Reveal>
-            <ul className="roles__grid">
-              {PLAYING_ROLES.map((r, i) => {
-                const count = players?.filter((p) => p.playingRole === r.value).length
-                return (
-                  <Reveal as="li" key={r.value} index={i} className="role-card">
-                    <span className="role-card__icon">{ROLES[r.value].icon}</span>
-                    <h3 className="role-card__title">{r.label}</h3>
-                    <p className="role-card__text">{ROLES[r.value].text}</p>
-                    {count !== undefined && (
-                      <p className="role-card__count">
-                        {count} registered
-                      </p>
-                    )}
-                  </Reveal>
-                )
-              })}
-            </ul>
+            <Reveal index={1}>
+              <RoleShowcase players={players} />
+            </Reveal>
           </div>
         </section>
 
