@@ -268,6 +268,92 @@
   grid-template-columns: 52px minmax(0, 1fr) 32px;
 }
 
+/* Phones: compact summary. Total is a slim strip; each breakdown is one row of count cells. */
+@media (max-width: 759px) {
+  .stats {
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+
+  .stat {
+    padding: 12px 14px;
+  }
+
+  .stat--total {
+    align-items: center;
+  }
+
+  .stat__value {
+    font-size: 40px;
+  }
+
+  .stat__label {
+    font-size: 13px;
+  }
+
+  .bars,
+  .stat--compact .bars {
+    grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr));
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .bars__row,
+  .stat--compact .bars__row {
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 2px;
+    min-width: 0;
+    padding: 6px 2px;
+    background: var(--gold-tint);
+    border-radius: var(--radius-sm);
+  }
+
+  .bars__track {
+    display: none;
+  }
+
+  .bars__count {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 22px;
+    line-height: 1;
+    text-align: center;
+    color: var(--gold);
+  }
+
+  .bars__label {
+    max-width: 100%;
+    font-size: 12px;
+    line-height: 1.2;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  /* Seven sizes share one row: labels never split ("XXXL"). */
+  .stat--compact .bars {
+    gap: 4px;
+  }
+
+  .stat--compact .bars__label {
+    font-size: 11px;
+    white-space: nowrap;
+    overflow-wrap: normal;
+  }
+
+  /* Zero counts stay readable but step back. */
+  .bars__row--zero {
+    background: var(--surface-sunken);
+  }
+
+  .bars__row--zero .bars__count {
+    color: var(--text-subtle);
+  }
+}
+
 /* ---------- Toolbar ---------- */
 
 .toolbar {

@@ -1,4 +1,4 @@
-import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react'
+import { useCallback, useDeferredValue, useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { PLAYING_ROLES, VILLAGES } from '../registration/constants'
 import { LeagueCrest } from '../registration/components/BrandHeader'
 import { AlertIcon, CheckIcon, RefreshIcon } from '../registration/components/icons'
@@ -331,9 +331,9 @@ function BreakdownPanel({
   return (
     <div className={`stat stat--breakdown${compact ? ' stat--compact' : ''}`}>
       <p className="stat__label">{title}</p>
-      <ul className="bars">
+      <ul className="bars" style={{ '--n': rows.length } as CSSProperties}>
         {rows.map((r) => (
-          <li key={r.value} className="bars__row">
+          <li key={r.value} className={`bars__row${!loading && r.count === 0 ? ' bars__row--zero' : ''}`}>
             <span className="bars__label">{r.label}</span>
             <span className="bars__track" aria-hidden="true">
               {!loading && r.count > 0 && (
