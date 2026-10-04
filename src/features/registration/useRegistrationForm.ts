@@ -45,6 +45,17 @@ function saveDraft(data: RegistrationData) {
   }
 }
 
+/** Merge values into the saved draft, e.g. a jersey designed on the landing page, before opening the form. */
+export function prefillDraft(patch: Partial<DraftFields>) {
+  try {
+    const raw = sessionStorage.getItem(DRAFT_KEY)
+    const current = raw ? (JSON.parse(raw) as Record<string, unknown>) : {}
+    sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ ...current, ...patch }))
+  } catch {
+    /* storage unavailable: the form simply starts empty */
+  }
+}
+
 export function clearDraft() {
   try {
     sessionStorage.removeItem(DRAFT_KEY)

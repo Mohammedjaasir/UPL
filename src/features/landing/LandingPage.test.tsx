@@ -1,4 +1,5 @@
 import { render, screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import type { RosterPlayer, RosterService } from '../roster/rosterService'
 import { LandingPage } from './LandingPage'
@@ -65,12 +66,16 @@ describe('LandingPage', () => {
 
   async function assertVillagesAndStrip() {
     render(<LandingPage service={service(players)} />)
-    const strip = await screen.findByRole('list', { name: /recently registered players/i })
-    expect(within(strip).getAllByRole('listitem').map((li) => li.textContent)).toEqual([
-      'Player 3Bowler3',
-      'Player 2Bowler2',
-      'Player 1Bowler1',
+    const grid = await screen.findByRole('list', { name: /recently registered players/i })
+    const tiles = within(grid).getAllByRole('listitem')
+    // Three real players, newest first, topped up with one open "your card here" slot.
+    expect(tiles.map((li) => li.textContent)).toEqual([
+      'Player 3Bowler, Right HandKirinda3',
+      'Player 2Bowler, Right HandKirinda2',
+      'Player 1Bowler, Right HandMiella1',
+      'Your card hereRegister to join the squad',
     ])
+    expect(within(tiles[3]).getByRole('link')).toHaveAttribute('href', '/register')
     const kirinda = screen.getByText('Kirinda', { selector: '.village-tile__name' }).closest('.village-tile')!
     // Set by an effect right after the players render: wait a tick, not for an animation.
     await waitFor(() => expect(kirinda.querySelector('.village-tile__num')).toHaveTextContent(/^2$/))
@@ -79,7 +84,35 @@ describe('LandingPage', () => {
   it('invites the first player when the list is empty', async () => {
     render(<LandingPage service={service([])} />)
     expect(await screen.findByText(/be the first name on the list/i)).toBeInTheDocument()
-    expect(screen.getByText(/your card could be the first one here/i)).toBeInTheDocument()
+    expect(screen.getAllByText('Your card here')).toHaveLength(4)
+  })
+
+  it('lets a player design a jersey, warns about taken numbers, and carries it into the form', async () => {
+    const user = userEvent.setup()
+    render(<LandingPage service={service(players)} />)
+    await screen.findByText('3 players have registered so far.')
+
+    await user.type(screen.getByLabelText('Name on the back'), 'perera')
+    expect(screen.getByLabelText('Name on the back')).toHaveValue('PERERA')
+
+    const number = screen.getByLabelText('Number')
+    await user.type(number, '2')
+    expect(screen.getByText('Number 2 is already taken. Try another.')).toBeInTheDocument()
+    await user.clear(number)
+    await user.type(number, '10')
+    expect(screen.getByText('Number 10 is free right now.')).toBeInTheDocument()
+
+    await user.click(within(screen.getByRole('group', { name: 'Jersey size' })).getByRole('button', { name: 'L' }))
+    const cta = screen.getByRole('link', { name: /register with this jersey/i })
+    expect(cta).toHaveAttribute('href', '/register')
+    cta.addEventListener('click', (e) => e.preventDefault()) // jsdom cannot navigate
+    await user.click(cta)
+
+    expect(JSON.parse(sessionStorage.getItem('msl.registration.draft.v1') ?? '{}')).toMatchObject({
+      jerseyName: 'PERERA',
+      jerseyNumber: '10',
+      jerseySize: 'L',
+    })
   })
 
   it('still works when live data is unavailable', async () => {
